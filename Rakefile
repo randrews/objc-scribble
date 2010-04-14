@@ -16,7 +16,7 @@ task :build => ["bin/scribble"]
 
 file "bin/scribble" => [:bindir] + SRC.map{|m| m.ext("o") } + HEADERS do
     frameworks = FRAMEWORKS.map{|f| "-framework #{f}" }.join(" ")
-    sh "gcc -o bin/scribble #{SRC.map{|m| m.ext('o') }} #{frameworks}"
+    sh "gcc -o bin/scribble #{SRC.map{|m| m.ext('o') }.join(' ')} #{frameworks} -fobjc-gc-only"
 end
 
 task :bindir do
@@ -24,7 +24,8 @@ task :bindir do
 end
 
 SRC.each{|filename| file filename.ext("o") => HEADERS } unless HEADERS.empty?
+SRC.each{|filename| file filename.ext("o") => filename }
 
 rule '.o' => '.m' do |t|
-    sh "gcc -c -o #{t.name} #{t.source}"
+    sh "gcc -c -o #{t.name} #{t.source} -fobjc-gc-only"
 end
