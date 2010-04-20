@@ -15,7 +15,7 @@ FRAMEWORKS = %w{Foundation AppKit}
 
 ENV["CC"] ||= "gcc"
 
-task :"3rd-party" => :sexpr
+task :"3rd-party" => "res/lib/libsexp.a"
 task :build => :"3rd-party"
 
 task :default=>:build
@@ -39,7 +39,7 @@ rule '.o' => '.m' do |t|
     sh "#{ENV['CC']} -c -o #{t.name} #{t.source} -fobjc-gc-only -Ires/include"
 end
 
-task :sexpr do
+file "res/lib/libsexp.a" do
     FileUtils.cd "res" do
         sh "tar -xzvf sexpr_1.2.tar.gz"
         FileUtils.cd "sexpr_1.2" do
