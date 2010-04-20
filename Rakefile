@@ -15,8 +15,7 @@ FRAMEWORKS = %w{Foundation AppKit}
 
 ENV["CC"] ||= "gcc"
 
-task :"3rd-party" => "res/lib/libsexp.a"
-task :build => :"3rd-party"
+task :"3rd-party" => :sexpr
 
 task :default=>:build
 
@@ -39,7 +38,7 @@ rule '.o' => '.m' do |t|
     sh "#{ENV['CC']} -c -o #{t.name} #{t.source} -fobjc-gc-only -Ires/include"
 end
 
-file "res/lib/libsexp.a" do
+file :sexpr => "res/lib/libsexp.a" do
     FileUtils.cd "res" do
         sh "tar -xzvf sexpr_1.2.tar.gz"
         FileUtils.cd "sexpr_1.2" do
@@ -47,10 +46,10 @@ file "res/lib/libsexp.a" do
             sh "make"
         end
 
-        FileUtils.mkdir "lib"
+        FileUtils.mkdir "lib" unless File.exists?("lib")
         FileUtils.cp "sexpr_1.2/src/libsexp.a", "lib"
 
-        FileUtils.mkdir "include"
+        FileUtils.mkdir "include" unless File.exists?("include")
         Dir["sexpr_1.2/src/*.h"].map{|f| FileUtils.cp f, "include" }
     end
 end
