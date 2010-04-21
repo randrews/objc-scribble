@@ -2,6 +2,18 @@
 
 @implementation Reader
 
+-(id) initWithCommandController: (CommandController*) commandController_p {
+  self = [super init];
+
+  if(self==nil){
+    return nil;
+  }
+
+  commandController = commandController_p;
+
+  return self;
+}
+
 // The arg is actually ignored
 -(void) startListening: (id) arg {
   sexp_io = init_iowrap(0);

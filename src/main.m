@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
+#import "CommandController.h"
 #import "Reader.h"
 #import "ScribbleView.h"
 
@@ -37,11 +38,13 @@ int main(int argc, const char* argv[]){
   ScribbleView* scribbleView = [[ScribbleView alloc] init];
   [window setContentView: scribbleView];
 
+  CommandController* commandController = [[CommandController alloc] initWithScribbleView: scribbleView];
+
   [window setTitle: title];
   [window makeKeyAndOrderFront:NSApp];
 
   // Create the thread that listens for input
-  Reader* reader = [[Reader alloc] init];
+  Reader* reader = [[Reader alloc] initWithCommandController: commandController];
   [NSThread detachNewThreadSelector: @selector(startListening:)
 	    toTarget: reader
 	    withObject: nil];
