@@ -17,7 +17,6 @@
 // The arg is actually ignored
 -(void) startListening: (id) arg {
   sexp_io = init_iowrap(0);
-  char* p = malloc(sizeof(char)*100);
 
   while(true){
     sexp_t* sexp = read_one_sexp(sexp_io);
@@ -42,17 +41,8 @@
       continue;
     }
 
-    // Print out some basic info about the list, for now.
-    NSLog(@"Length: %d", sexp_list_length(sexp));
-    NSLog(@"Type: %d", sexp->ty);
-
-    print_sexp(p, 100, sexp);
-    NSLog(@"Printed: %s", p);
-
-    if(sexp->ty == SEXP_VALUE){
-      NSLog(@"Atom type: %d", sexp->aty);
-      NSLog(@"Atom: %s", sexp->val);
-    }
+    // Send it to the CommandController
+    [commandController handleSexp: sexp];
 
     // Clean it up.
     destroy_sexp(sexp);

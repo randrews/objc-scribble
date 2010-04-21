@@ -7,8 +7,10 @@
   ScribbleView* scribbleView;
 }
 
--(id) initWithScribbleView: (ScribbleView*) scribbleView;
--(void) handleSexpr: (sexp_t*) sexpr;
--(NSBezierPath*) pathForName: (NSString*) name;
++(NSString*) stringForSexp: (sexp_t*) sexp;
++(BOOL) sexpIsValid: (sexp_t*) sexp;
 
+-(id) initWithScribbleView: (ScribbleView*) scribbleView;
+-(void) handleSexp: (sexp_t*) sexpr;
+-(NSBezierPath*) pathForName: (NSString*) name;
 @end
