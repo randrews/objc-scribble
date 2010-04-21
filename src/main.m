@@ -41,7 +41,10 @@ int main(int argc, const char* argv[]){
   CommandController* commandController = [[CommandController alloc] initWithScribbleView: scribbleView];
 
   [window setTitle: title];
-  [window makeKeyAndOrderFront:NSApp];
+
+  if(width>0 && height>0){
+    [window makeKeyAndOrderFront:NSApp];
+  }
 
   // Create the thread that listens for input
   Reader* reader = [[Reader alloc] initWithCommandController: commandController];
