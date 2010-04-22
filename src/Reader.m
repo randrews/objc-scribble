@@ -23,7 +23,15 @@
   while(ch = getchar()){
     if(ch==EOF){ return NO; }
 
-    write((int)fd, &ch, 1);
+    // This begins a comment, which we have to catch before
+    // writing the char to out:
+    if(mode == 's' && ch == '#'){
+      mode = 'c';
+    }
+
+    if(mode != 'c'){
+      write((int)fd, &ch, 1);
+    }
 
     switch(mode){
     case 's':
@@ -54,6 +62,12 @@
 
     case 'b':
       mode = 'q';
+      break;
+
+    case 'c':
+      if(ch=='\n'){
+	mode = 's';
+      }
       break;
     }
   }
@@ -94,15 +108,6 @@
 
     // Clean it up.
     destroy_sexp(sexp);
-
-    /*
-      Destroying the iowrap each time fixes some weird parse
-      problems with newlines before the final close-paren, but
-      causes it to ignore everything after the first sexp on a line.
-
-      destroy_iowrap(sexp_io);
-      sexp_io = init_iowrap(0);
-    */
   }
 
   exit(0);
