@@ -22,6 +22,7 @@
 
   id command = [[NSString alloc] initWithUTF8String: sexp->list->val ];
   NSLog(@"Command: %@",command);
+  NSLog(@"String: %@",[CommandController stringForSexp: sexp]);
 }
 
 -(NSBezierPath*) pathForName: (NSString*) name { return [paths objectForKey: name]; }
