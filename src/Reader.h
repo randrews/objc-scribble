@@ -9,5 +9,6 @@
 
 -(id) initWithCommandController: (CommandController*) commandController_p;
 -(void) startListening: (id) arg;
+-(BOOL) bufferOneSexpToPipe: (FILE*) fd;
 
 @end

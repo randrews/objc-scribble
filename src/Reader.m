@@ -14,11 +14,59 @@
   return self;
 }
 
+-(BOOL) bufferOneSexpToPipe: (FILE*) fd {
+  int ch;
+
+  int depth = 0;
+  char mode = 's'; // [s]tart, [q]uote, [b]ackslash, [c]omment
+
+  while(ch = getchar()){
+    if(ch==EOF){ return NO; }
+
+    write((int)fd, &ch, 1);
+
+    switch(mode){
+    case 's':
+      switch(ch){
+      case '(':
+	depth++;
+	break;
+      case ')':
+	depth--;
+	if(depth==0){ return YES; }
+	break;
+      case '"':
+	mode = 'q';
+	break;
+      }
+      break;
+
+    case 'q':
+      switch(ch){
+      case '"':
+	mode = 's';
+	break;
+      case '\\':
+	mode = 'b';
+	break;
+      }
+      break;
+
+    case 'b':
+      mode = 'q';
+      break;
+    }
+  }
+}
+
 // The arg is actually ignored
 -(void) startListening: (id) arg {
-  sexp_io = init_iowrap(0);
+  int fd[2];
+  pipe(fd);
 
-  while(true){
+  sexp_io = init_iowrap(fd[0]);
+
+  while([self bufferOneSexpToPipe: (FILE*)fd[1]]){
     sexp_t* sexp = read_one_sexp(sexp_io);
 
     // If it's null for some reason, just keep going.
@@ -56,6 +104,8 @@
       sexp_io = init_iowrap(0);
     */
   }
+
+  exit(0);
 }
 
 @end
