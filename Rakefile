@@ -20,6 +20,17 @@ task :"3rd-party" => :sexpr
 
 task :default=>[:"3rd-party", :build]
 
+desc "Run RSpec tests"
+task :test do
+    # Run these in a forked process, so that we can have stuff
+    # depend on this task
+    fork do
+        exec "spec --color test/*.rb"
+    end
+
+    Process.wait
+end
+
 desc "Build the project"
 task :build => ["bin/scribble"]
 
