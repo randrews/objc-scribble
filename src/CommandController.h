@@ -3,14 +3,17 @@
 #import "ScribbleView.h"
 
 @interface CommandController : NSObject {
-  NSMutableDictionary* paths;
+  NSMutableDictionary* shapes;
   ScribbleView* scribbleView;
 }
 
 +(NSString*) stringForSexp: (sexp_t*) sexp;
 +(BOOL) sexpIsValid: (sexp_t*) sexp;
++(NSArray*) arrayForSexp: (sexp_t*) sexp;
 
 -(id) initWithScribbleView: (ScribbleView*) scribbleView;
 -(void) handleSexp: (sexp_t*) sexpr;
--(NSBezierPath*) pathForName: (NSString*) name;
+-(NSBezierPath*) shapeForName: (NSString*) name;
+-(NSBezierPath*) shapeForSexp: (sexp_t*) sexp;
+
 @end

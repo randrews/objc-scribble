@@ -9,10 +9,6 @@ describe "sexp validation" do
         lines.split("\n")
     end
 
-    it "should read the command from a valid sexp" do
-        run("(a b c)")[0].should =~ /Command: a$/
-    end
-
     it "should reject an empty list" do
         run("()")[0].should =~ /Command was an empty list$/
     end
@@ -20,5 +16,30 @@ describe "sexp validation" do
     it "should reject a command with a non-symbol car" do
         run("((1 2) 3)")[0].should =~ /wasn't a symbol: \(1 2\)$/
         run('(\"foo\" 3)')[0].should =~ /wasn't a symbol: "foo"$/ # backslashes for the shell
+    end
+
+    it "should echo a sexp with the echo command" do
+        run("(echo foo bar)")[0].should =~ /\(echo foo bar\)/
+    end
+
+    it "should create a rect when told to" do
+        run("(rect 0 0 100 50)")[0].should =~ /Successfully created rect/
+    end
+
+    it "should reject a rect with too few / many args" do
+        run("(rect 0 1 2)")[0].should =~ /ERROR: Expected/
+        run("(rect 0 1 2 3 4)")[0].should =~ /ERROR: Expected/
+    end
+
+    it "should reject a rect with lists for args" do
+        run("(rect (0) 1 2 3)")[0].should =~ /ERROR:/
+    end
+
+    it "should accept floats as params" do
+        run("(rect 0.0 0.0 100 50)")[0].should =~ /Successfully created rect/
+    end
+
+    it "should deal with strings, and evaluate them as numbers" do
+        run("(rect a b c d)")[0].should =~ /Successfully created rect/
     end
 end
