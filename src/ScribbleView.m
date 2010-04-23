@@ -2,7 +2,7 @@
 
 @implementation ScribbleView
 
--(id) init: (ScribbleView*) scribbleView_p {
+-(id) init {
   self = [super init];
 
   if(self==nil){
@@ -17,8 +17,19 @@
 - (void) drawRect: (NSRect) rect {
   [[NSColor colorWithCalibratedRed: 0 green: 0 blue: 0x60/256.0 alpha: 1.0] setFill];
   [[NSBezierPath bezierPathWithRect: rect] fill];
+
+  for(DrawingCommand* dc in drawingCommands){
+    if([dc shouldFill]){
+      // Later
+    } else {
+      [[dc color] setStroke];
+      [[dc shape] stroke];
+    }
+  }
 }
 
-@synthesize drawingCommands;
+-(void) addDrawingCommand: (DrawingCommand*) dc {
+  [drawingCommands addObject: dc];
+}
 
 @end

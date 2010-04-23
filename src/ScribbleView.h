@@ -3,11 +3,10 @@
 #import "DrawingCommand.h"
 
 @interface ScribbleView : NSView {
-  NSArray* drawingCommands;
+  NSMutableArray* drawingCommands;
 }
 
-@property(retain) NSArray* drawingCommands;
-
 -(void) drawRect: (NSRect) rect;
+-(void) addDrawingCommand: (DrawingCommand*) dc;
 
 @end
