@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #include "sexp.h"
 #import "ScribbleView.h"
+#import "DrawingCommand.h"
 
 @interface CommandController : NSObject {
   NSMutableDictionary* shapes;

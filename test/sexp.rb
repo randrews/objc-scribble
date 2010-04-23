@@ -23,23 +23,31 @@ describe "sexp validation" do
     end
 
     it "should create a rect when told to" do
-        run("(rect 0 0 100 50)")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect 0 0 100 50))")[0].should =~ /Successfully created rect/
     end
 
     it "should reject a rect with too few / many args" do
-        run("(rect 0 1 2)")[0].should =~ /ERROR: Expected/
-        run("(rect 0 1 2 3 4)")[0].should =~ /ERROR: Expected/
+        run("(shape foo (rect 0 1 2))")[0].should =~ /ERROR: Expected/
+        run("(shape foo (rect 0 1 2 3 4))")[0].should =~ /ERROR: Expected/
     end
 
     it "should reject a rect with lists for args" do
-        run("(rect (0) 1 2 3)")[0].should =~ /ERROR:/
+        run("(shape foo (rect (0) 1 2 3))")[0].should =~ /ERROR:/
     end
 
     it "should accept floats as params" do
-        run("(rect 0.0 0.0 100 50)")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect 0.0 0.0 100 50))")[0].should =~ /Successfully created rect/
     end
 
     it "should deal with strings, and evaluate them as numbers" do
-        run("(rect a b c d)")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect a b c d))")[0].should =~ /Successfully created rect/
+    end
+
+    it "should refuse to create a shape with a bad name" do
+        run("(shape (foo) (rect a b c d))")[0].should =~ /ERROR/
+    end
+
+    it "should refuse to create a shape with no shape" do
+        run("(shape foo)")[0].should =~ /ERROR/
     end
 end

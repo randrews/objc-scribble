@@ -85,15 +85,31 @@
   //NSLog(@"String: %@",[CommandController stringForSexp: sexp]);
   if([command isEqual: @"echo"]){
     NSLog(@"%@", [CommandController stringForSexp: sexp]);
-  } else if([command isEqual: @"rect"]){
-    id shape = [self shapeForSexp: sexp];
-    if(shape){ NSLog(@"Successfully created rect"); }
+  } else if([command isEqual: @"shape"]){
+
+    // Check that first arg is an atom
+    if(sexp->list->next && sexp->list->next->ty == SEXP_VALUE){
+
+      NSString* name = [NSString stringWithUTF8String: sexp->list->next->val];
+      id shape = [self shapeForSexp: sexp->list->next->next];
+
+      if(shape){
+	NSLog(@"Successfully created rect");
+	[shapes setValue: shape forKey: name];
+      } else {
+	NSLog(@"ERROR: Expected (shape [name] [shape]), got %@", [CommandController stringForSexp: sexp]);
+      }
+    } else {
+      NSLog(@"ERROR: Expected (shape [name] [shape]), got %@", [CommandController stringForSexp: sexp]);
+    }
   }
 }
 
 -(NSBezierPath*) shapeForName: (NSString*) name { return [shapes objectForKey: name]; }
 
 -(NSBezierPath*) shapeForSexp: (sexp_t*) sexp {
+  if(!sexp){ return nil; }
+
   if([CommandController sexpIsValid: sexp]){
     NSString* type = [NSString stringWithUTF8String: sexp->list->val];
 
