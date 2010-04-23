@@ -3,5 +3,5 @@
 @implementation DrawingCommand
 @synthesize shape;
 @synthesize color;
-@synthesize fill;
+@synthesize shouldFill;
 @end

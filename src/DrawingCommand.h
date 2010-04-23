@@ -4,11 +4,11 @@
 @interface DrawingCommand : NSObject {
   NSBezierPath* shape;
   NSColor* color;
-  BOOL fill;
+  BOOL shouldFill;
 }
 
 @property(retain) NSBezierPath* shape;
 @property(retain) NSColor* color;
-@property BOOL fill;
+@property BOOL shouldFill;
 
 @end
