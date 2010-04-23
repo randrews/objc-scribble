@@ -1,9 +1,13 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
+#import "DrawingCommand.h"
 
 @interface ScribbleView : NSView {
+  NSArray* drawingCommands;
 }
 
-- (void) drawRect: (NSRect) rect;
+@property(retain) NSArray* drawingCommands;
+
+-(void) drawRect: (NSRect) rect;
 
 @end
