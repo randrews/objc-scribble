@@ -23,7 +23,7 @@ describe "sexp validation" do
     end
 
     it "should create a rect when told to" do
-        run("(shape foo (rect 0 0 100 50))")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect 0 0 100 50))").should be_empty
     end
 
     it "should reject a rect with too few / many args" do
@@ -36,11 +36,11 @@ describe "sexp validation" do
     end
 
     it "should accept floats as params" do
-        run("(shape foo (rect 0.0 0.0 100 50))")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect 0.0 0.0 100 50))").should be_empty
     end
 
     it "should deal with strings, and evaluate them as numbers" do
-        run("(shape foo (rect a b c d))")[0].should =~ /Successfully created rect/
+        run("(shape foo (rect a b c d))").should be_empty
     end
 
     it "should refuse to create a shape with a bad name" do
@@ -50,4 +50,27 @@ describe "sexp validation" do
     it "should refuse to create a shape with no shape" do
         run("(shape foo)")[0].should =~ /ERROR/
     end
+
+    it "should refuse to stroke with too few / many arguments" do
+        run("(stroke foo 1 2 3 4)")[0].should =~ /ERROR/
+        run("(stroke foo 1 2)")[0].should =~ /ERROR/
+    end
+
+    it "should refuse to stroke an illegal shape" do
+        run("(stroke (not-a-rect) 1 2 3)")[0].should =~ /ERROR/
+        run("(stroke (rect 1 2) 1 2 3)")[0].should =~ /ERROR/
+    end
+
+    it "should refuse to stroke a shape that doesn't exist" do
+        run("(stroke not-a-rect 1 2 3)")[0].should =~ /ERROR/
+    end
+
+    it "should stroke a shape literal" do
+        run("(stroke (rect 0 0 100 50) 1 2 3)").should be_empty
+    end
+
+    it "should stroke a shape by name" do
+        run("(shape foo (rect 0 0 100 50)) (stroke foo 1 0 0)").should be_empty
+    end
+
 end
