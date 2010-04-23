@@ -2,13 +2,13 @@ require "fileutils"
 
 BIN = File.join(File.dirname(__FILE__),"../bin/scribble")
 
-describe "sexp validation" do
-    # Run the app with the given input, return the output (stdout and stderr) as an array of lines
-    def run input
-        lines = `echo "#{input}" | #{BIN} 0 0 2>&1`
-        lines.split("\n")
-    end
+# Run the app with the given input, return the output (stdout and stderr) as an array of lines
+def run input
+    lines = `echo "#{input}" | #{BIN} 0 0 2>&1`
+    lines.split("\n")
+end
 
+describe "sexp validation" do
     it "should reject an empty list" do
         run("()")[0].should =~ /Command was an empty list$/
     end
@@ -21,7 +21,9 @@ describe "sexp validation" do
     it "should echo a sexp with the echo command" do
         run("(echo foo bar)")[0].should =~ /\(echo foo bar\)/
     end
+end
 
+describe "shape command" do
     it "should create a rect when told to" do
         run("(shape foo (rect 0 0 100 50))").should be_empty
     end
@@ -50,10 +52,12 @@ describe "sexp validation" do
     it "should refuse to create a shape with no shape" do
         run("(shape foo)")[0].should =~ /ERROR/
     end
+end
 
+describe "stroke command" do
     it "should refuse to stroke with too few / many arguments" do
-        run("(stroke foo 1 2 3 4)")[0].should =~ /ERROR/
-        run("(stroke foo 1 2)")[0].should =~ /ERROR/
+        run("(stroke (rect 0 0 0 0) 1 2 3 4 5)")[0].should =~ /ERROR/
+        run("(stroke (rect 0 0 0 0) 1 2)")[0].should =~ /ERROR/
     end
 
     it "should refuse to stroke an illegal shape" do
@@ -73,4 +77,7 @@ describe "sexp validation" do
         run("(shape foo (rect 0 0 100 50)) (stroke foo 1 0 0)").should be_empty
     end
 
+    it "should stroke a shape with an alpha" do
+        run("(stroke (rect 100 100 50 50) 1 0 0 0.5)").should be_empty
+    end
 end
