@@ -30,7 +30,7 @@
     }
 
     if(mode != 'c'){
-      write((int)fd, &ch, 1);
+      write((long int)fd, &ch, 1);
     }
 
     switch(mode){
@@ -80,7 +80,7 @@
 
   sexp_io = init_iowrap(fd[0]);
 
-  while([self bufferOneSexpToPipe: (FILE*)fd[1]]){
+  while([self bufferOneSexpToPipe: (FILE*)(long int)fd[1]]){
     sexp_t* sexp = read_one_sexp(sexp_io);
 
     // If it's null for some reason, just keep going.
