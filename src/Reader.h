@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#include "ParseSexp.h"
 #include "CommandController.h"
 #include "sexp.h"
 

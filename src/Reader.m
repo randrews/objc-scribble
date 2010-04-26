@@ -83,6 +83,8 @@
   while([self bufferOneSexpToPipe: (FILE*)(long int)fd[1]]){
     sexp_t* sexp = read_one_sexp(sexp_io);
 
+    NSLog(@"Sexp: %@",[NSArray arrayForSexp: sexp]);
+
     // If it's null for some reason, just keep going.
     // Probably means we're at EOF. If so, just bail.
     if(!sexp){
