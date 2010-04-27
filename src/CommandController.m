@@ -6,11 +6,13 @@
 
 @interface CommandController (Internals)
 +(BOOL) commandIsValid: (NSArray*) sexp;
++(NSColor*) colorForArray: (NSArray*) array;
 -(NSBezierPath*) shapeForSexp: (NSArray*) sexp;
 @end
 
 @interface CommandController (Commands)
 -(void) shapeCommand: (NSArray*) sexp;
+-(void) strokeCommand: (NSArray*) sexp;
 @end
 
 //////////////////////////////////////////////////
@@ -45,37 +47,70 @@
 
   // It's a name of a shape
   if([sexp isKindOfClass: [NSString class]]){
-    [self shapeForName: (NSString*)sexp];
+    return [self shapeForName: (NSString*)sexp];
 
     // It's a literal shape
   } else if([sexp isKindOfClass: [NSArray class]]) {
       NSString* type = [sexp objectAtIndex: 0];
 
-    // Currently, we only support rects
-    if([type isEqual: @"rect"]){
-      if([sexp count] != 5){
-	NSLog(@"ERROR: Expected (rect [x] [y] [width] [height]), got %@", [sexp printAsSexp]);
-	return nil;
-      }
-
-      // Ensure these are all atoms
-      for(id obj in sexp){
-	if(![obj isKindOfClass: [NSString class]]){
+      // Currently, we only support rects
+      if([type isEqual: @"rect"]){
+	if([sexp count] != 5){
 	  NSLog(@"ERROR: Expected (rect [x] [y] [width] [height]), got %@", [sexp printAsSexp]);
 	  return nil;
 	}
+
+	// Ensure these are all atoms
+	for(id obj in sexp){
+	  if(![obj isKindOfClass: [NSString class]]){
+	    NSLog(@"ERROR: Expected (rect [x] [y] [width] [height]), got %@", [sexp printAsSexp]);
+	    return nil;
+	  }
+	}
+
+	float x = [[sexp objectAtIndex: 1] floatValue] + 0.5;
+	float y = [[sexp objectAtIndex: 2] floatValue] + 0.5;
+	float width = [[sexp objectAtIndex: 3] floatValue];
+	float height = [[sexp objectAtIndex: 4] floatValue];
+
+	return [NSBezierPath bezierPathWithRect: NSMakeRect(x, y, width, height)];
+      } else {
+	return nil;
       }
-
-      float x = [[sexp objectAtIndex: 1] floatValue] + 0.5;
-      float y = [[sexp objectAtIndex: 2] floatValue] + 0.5;
-      float width = [[sexp objectAtIndex: 3] floatValue];
-      float height = [[sexp objectAtIndex: 4] floatValue];
-
-      return [NSBezierPath bezierPathWithRect: NSMakeRect(x, y, width, height)];
-    }
   } else {
     return nil;
   }
+}
+
++(NSColor*) colorForArray: (NSArray*) array {
+  // Either (r g b) or (r g b a)
+  if([array count] < 3 || [array count] > 4){
+    return nil;
+  }
+
+  // Make sure everything's an atom
+  for(id obj in array){
+    if(![obj isKindOfClass: [NSString class]]){
+      return nil;
+    }
+  }
+
+  NSArray* color_elements;
+
+  // If it's r g b, then copy into a larger array and add an alpha
+  if([array count] == 3){
+    color_elements = [NSMutableArray arrayWithCapacity: 4];
+    [(NSMutableArray*)color_elements addObjectsFromArray: array];
+    [(NSMutableArray*)color_elements addObject: @"1.0"];
+  } else {
+    // Otherwise, we're fine as is
+    color_elements = array;
+  }
+
+  return [NSColor colorWithCalibratedRed: [[color_elements objectAtIndex: 0] floatValue]
+		  green: [[color_elements objectAtIndex: 1] floatValue]
+		  blue: [[color_elements objectAtIndex: 2] floatValue]
+		  alpha: [[color_elements objectAtIndex: 3] floatValue]];
 }
 
 @end
@@ -110,53 +145,9 @@
     NSLog(@"%@", [sexp printAsSexp]);
   } else if([command isEqual: @"shape"]){
     [self shapeCommand: sexp];
+  } else if([command isEqual: @"stroke"]){
+    [self strokeCommand: sexp];
   }
-//   } else if([command isEqual: @"stroke"]){
-
-//     // First, make sure we have the right number of arguments.
-//     // We need five, including "stroke", with an optional sixth
-//     int length = sexp_list_length(sexp);
-//     if(length == 5 || length == 6){
-
-//       // Now, we need to find the shape.
-//       NSBezierPath* shape;
-
-//       // It's either a name, in which case shapeForName
-//       if(sexp->list->next->ty == SEXP_VALUE){
-// 	shape = [self shapeForName: [NSString stringWithUTF8String: sexp->list->next->val]];
-
-// 	// Or it's a list, in which case shapeForSexp
-//       } else if(sexp->list->next->ty == SEXP_LIST){
-// 	shape = [self shapeForSexp: sexp->list->next];
-//       }
-
-//       // Check that we have a shape
-//       if(!shape){
-// 	NSLog(@"ERROR: %@ isn't a valid shape", [CommandController stringForSexp: sexp->list->next]);
-//       } else {
-
-// 	// We have a shape, now we need a color.
-// 	NSMutableArray* color_elements = [NSMutableArray arrayWithCapacity: 4];
-// 	[CommandController fillArray: color_elements fromSexp: sexp->list->next->next];
-
-// 	// if an alpha isn't specified, default to 1.0
-// 	if([color_elements count] < 4){
-// 	  [color_elements addObject: @"1.0"];
-// 	}
-
-// 	DrawingCommand* dc = [[DrawingCommand alloc] init];
-// 	dc.shape = shape;
-// 	dc.shouldFill = NO;
-// 	dc.color = [NSColor colorWithCalibratedRed: [[color_elements objectAtIndex: 0] floatValue]
-// 			    green: [[color_elements objectAtIndex: 1] floatValue]
-// 			    blue: [[color_elements objectAtIndex: 2] floatValue]
-// 			    alpha: [[color_elements objectAtIndex: 3] floatValue]];
-
-// 	[scribbleView addDrawingCommand: dc];
-// 	[scribbleView setNeedsDisplay: YES];
-//       }
-//     } else {
-//       NSLog(@"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?]), got %@", [CommandController stringForSexp: sexp]);
 }
 
 -(NSBezierPath*) shapeForName: (NSString*) name { return [shapes objectForKey: name]; }
@@ -184,6 +175,43 @@
   } else {
     NSLog(@"ERROR: Failed to create shape from %@", [sexp objectAtIndex: 2]);
   }
+}
+
+-(void) strokeCommand: (NSArray*) sexp {
+  // First, make sure we have the right number of arguments.
+  // We need five, including "stroke", with an optional sixth
+  if([sexp count] != 5 && [sexp count] != 6){
+    NSLog(@"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?]), got %@",
+	  [sexp printAsSexp]);
+    return;
+  }
+
+  // Now, we need to find the shape.
+  NSBezierPath* shape = [self shapeForSexp: [sexp objectAtIndex: 1]];
+
+  // Check that we have a shape
+  if(!shape){
+    NSLog(@"ERROR: %@ isn't a valid shape", [sexp printAsSexp]);
+    return;
+  }
+
+  // We have a shape, now we need a color.
+  NSColor* color = [CommandController colorForArray:
+					[sexp subarrayWithRange:
+						NSMakeRange(2, [sexp count] - 2)]];
+
+  if(!color){
+    NSLog(@"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
+    return;
+  }
+
+  DrawingCommand* dc = [[DrawingCommand alloc] init];
+  dc.shape = shape;
+  dc.shouldFill = NO;
+  dc.color = color;
+
+  [scribbleView addDrawingCommand: dc];
+  [scribbleView setNeedsDisplay: YES];
 }
 
 @end
