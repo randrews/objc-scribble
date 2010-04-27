@@ -15,7 +15,6 @@ describe "sexp validation" do
 
     it "should reject a command with a non-symbol car" do
         run("((1 2) 3)")[0].should =~ /wasn't a symbol: \(1 2\)$/
-        run('(\"foo\" 3)')[0].should =~ /wasn't a symbol: "foo"$/ # backslashes for the shell
     end
 
     it "should echo a sexp with the echo command" do
