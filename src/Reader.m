@@ -81,35 +81,23 @@
   sexp_io = init_iowrap(fd[0]);
 
   while([self bufferOneSexpToPipe: (FILE*)(long int)fd[1]]){
-    sexp_t* sexp = read_one_sexp(sexp_io);
+    sexp_t* c_sexp = read_one_sexp(sexp_io);
 
-    NSLog(@"Sexp: %@",[NSArray arrayForSexp: sexp]);
-
-    // If it's null for some reason, just keep going.
-    // Probably means we're at EOF. If so, just bail.
-    if(!sexp){
-      if(sexp_errno == SEXP_ERR_IO_EMPTY){
+    // If we're at EOF, just bail.
+    if(sexp_errno == SEXP_ERR_IO_EMPTY){
 	NSLog(@"Pipe closed");
 	break;
-      }else{
-	continue;
-      }
     }
 
-    // If there's a newline right before the final paren
-    // of a sexp, it shows up as two sexps, one being an atom.
-    // This can screw things up, so we'll just ignore anything
-    // that's not a list. All sexps we read should be lists anyway.
-    if(sexp->ty != SEXP_LIST){
-      destroy_sexp(sexp);
-      continue;
-    }
+    // Convert this mess to ObjC. This also checks for list-itude,
+    // and null
+    NSArray* sexp = [NSArray arrayForSexp: c_sexp];
+
+    // Clean up the c one, now that we've converted it
+    destroy_sexp(c_sexp);
 
     // Send it to the CommandController
     [commandController handleSexp: sexp];
-
-    // Clean it up.
-    destroy_sexp(sexp);
   }
 
   exit(0);
