@@ -13,6 +13,7 @@
 @interface CommandController (Commands)
 -(void) shapeCommand: (NSArray*) sexp;
 -(void) strokeCommand: (NSArray*) sexp;
+-(void) fillCommand: (NSArray*) sexp;
 @end
 
 //////////////////////////////////////////////////
@@ -147,6 +148,8 @@
     [self shapeCommand: sexp];
   } else if([command isEqual: @"stroke"]){
     [self strokeCommand: sexp];
+  } else if([command isEqual: @"fill"]){
+    [self fillCommand: sexp];
   }
 }
 
@@ -208,6 +211,43 @@
   DrawingCommand* dc = [[DrawingCommand alloc] init];
   dc.shape = shape;
   dc.shouldFill = NO;
+  dc.color = color;
+
+  [scribbleView addDrawingCommand: dc];
+  [scribbleView setNeedsDisplay: YES];
+}
+
+-(void) fillCommand: (NSArray*) sexp {
+  // First, make sure we have the right number of arguments.
+  // We need five, including "stroke", with an optional sixth
+  if([sexp count] != 5 && [sexp count] != 6){
+    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",
+	  [sexp printAsSexp]);
+    return;
+  }
+
+  // Now, we need to find the shape.
+  NSBezierPath* shape = [self shapeForSexp: [sexp objectAtIndex: 1]];
+
+  // Check that we have a shape
+  if(!shape){
+    NSLog(@"ERROR: %@ isn't a valid shape", [sexp printAsSexp]);
+    return;
+  }
+
+  // We have a shape, now we need a color.
+  NSColor* color = [CommandController colorForArray:
+					[sexp subarrayWithRange:
+						NSMakeRange(2, [sexp count] - 2)]];
+
+  if(!color){
+    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
+    return;
+  }
+
+  DrawingCommand* dc = [[DrawingCommand alloc] init];
+  dc.shape = shape;
+  dc.shouldFill = YES;
   dc.color = color;
 
   [scribbleView addDrawingCommand: dc];

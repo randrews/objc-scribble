@@ -20,7 +20,8 @@
 
   for(DrawingCommand* dc in drawingCommands){
     if([dc shouldFill]){
-      // Later
+      [[dc color] setFill];
+      [[dc shape] fill];
     } else {
       [[dc color] setStroke];
       [[dc shape] stroke];
