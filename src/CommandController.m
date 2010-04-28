@@ -14,6 +14,8 @@
 -(void) shapeCommand: (NSArray*) sexp;
 -(void) strokeCommand: (NSArray*) sexp;
 -(void) fillCommand: (NSArray*) sexp;
+-(void) clearCommand: (NSArray*) sexp;
+-(void) backgroundCommand: (NSArray*) sexp;
 @end
 
 //////////////////////////////////////////////////
@@ -150,6 +152,10 @@
     [self strokeCommand: sexp];
   } else if([command isEqual: @"fill"]){
     [self fillCommand: sexp];
+  } else if([command isEqual: @"clear"]){
+    [self clearCommand: sexp];
+  } else if([command isEqual: @"background"]){
+    [self backgroundCommand: sexp];
   }
 }
 
@@ -251,6 +257,33 @@
   dc.color = color;
 
   [scribbleView addDrawingCommand: dc];
+  [scribbleView setNeedsDisplay: YES];
+}
+
+-(void) clearCommand: (NSArray*) sexp {
+  if([sexp count] != 1){
+    NSLog(@"ERROR: clear accepts no arguments, got %@", [sexp printAsSexp]);
+  }
+
+  [scribbleView clearDrawingCommands];
+  [scribbleView setNeedsDisplay: YES];
+}
+
+-(void) backgroundCommand: (NSArray*) sexp {
+  if([sexp count] != 4){
+    NSLog(@"ERROR: Expected (background [red] [green] [blue]), got %@", [sexp printAsSexp]);
+  }
+
+  NSColor* color = [CommandController colorForArray:
+					[sexp subarrayWithRange:
+						NSMakeRange(1, 3)]];
+
+  if(!color){
+    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
+    return;
+  }
+
+  [scribbleView setBackgroundColor: color];
   [scribbleView setNeedsDisplay: YES];
 }
 

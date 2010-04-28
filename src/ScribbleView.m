@@ -11,11 +11,13 @@
 
   drawingCommands = [NSMutableArray arrayWithCapacity: 10];
 
+  backgroundColor = [NSColor colorWithCalibratedRed: 1 green: 1 blue: 1 alpha: 1.0];
+
   return self;
 }
 
 - (void) drawRect: (NSRect) rect {
-  [[NSColor colorWithCalibratedRed: 0 green: 0 blue: 0x60/256.0 alpha: 1.0] setFill];
+  [backgroundColor setFill];
   [[NSBezierPath bezierPathWithRect: rect] fill];
 
   for(DrawingCommand* dc in drawingCommands){
@@ -31,6 +33,18 @@
 
 -(void) addDrawingCommand: (DrawingCommand*) dc {
   [drawingCommands addObject: dc];
+}
+
+-(void) clearDrawingCommands {
+  [drawingCommands removeAllObjects];
+}
+
+-(void) setBackgroundColor: (NSColor*) color {
+  backgroundColor = color;
+
+  if(!backgroundColor){
+    backgroundColor = [NSColor colorWithCalibratedRed: 1 green: 1 blue: 1 alpha: 1.0];
+  }
 }
 
 @end
