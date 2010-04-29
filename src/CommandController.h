@@ -12,5 +12,5 @@
 -(id) initWithScribbleView: (ScribbleView*) scribbleView;
 -(void) handleSexp: (NSArray*) sexp;
 -(NSBezierPath*) shapeForName: (NSString*) name;
-
+-(DrawingCommand*) drawingCommandForShape: (id) shape withColor: (NSArray*) color;
 @end

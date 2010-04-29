@@ -155,6 +155,18 @@
   return shape;
 }
 
+-(DrawingCommand*) drawingCommandForShape: (id) shape withColor: (NSArray*) color {
+  NSBezierPath* path = [self shapeForSexp: shape];
+
+  NSColor* c = [CommandController colorForArray: color];
+
+  DrawingCommand* dc = [[DrawingCommand alloc] init];
+  dc.shape = path;
+  dc.color = c;
+
+  return dc;
+}
+
 @end
 
 //////////////////////////////////////////////////
@@ -181,23 +193,11 @@
 		 format: @"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?])"];
   }
 
-  // Now, we need to find the shape.
-  NSBezierPath* shape = [self shapeForSexp: [sexp objectAtIndex: 1]];
-
-  // We have a shape, now we need a color.
-  NSColor* color = [CommandController colorForArray:
-					[sexp subarrayWithRange:
+  DrawingCommand* dc = [self drawingCommandForShape: [sexp objectAtIndex: 1]
+			     withColor: [sexp subarrayWithRange:
 						NSMakeRange(2, [sexp count] - 2)]];
 
-  if(!color){
-    NSLog(@"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
-    return;
-  }
-
-  DrawingCommand* dc = [[DrawingCommand alloc] init];
-  dc.shape = shape;
   dc.shouldFill = NO;
-  dc.color = color;
 
   [scribbleView addDrawingCommand: dc];
   [scribbleView setNeedsDisplay: YES];
@@ -205,63 +205,37 @@
 
 -(void) fillCommand: (NSArray*) sexp {
   // First, make sure we have the right number of arguments.
-  // We need five, including "stroke", with an optional sixth
+  // We need five, including "fill", with an optional sixth
   if([sexp count] != 5 && [sexp count] != 6){
-    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",
-	  [sexp printAsSexp]);
-    return;
+    [NSException raise: @"badCmdFmt"
+		 format: @"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?])"];
   }
 
-  // Now, we need to find the shape.
-  NSBezierPath* shape = [self shapeForSexp: [sexp objectAtIndex: 1]];
-
-  // Check that we have a shape
-  if(!shape){
-    NSLog(@"ERROR: %@ isn't a valid shape", [sexp printAsSexp]);
-    return;
-  }
-
-  // We have a shape, now we need a color.
-  NSColor* color = [CommandController colorForArray:
-					[sexp subarrayWithRange:
+  DrawingCommand* dc = [self drawingCommandForShape: [sexp objectAtIndex: 1]
+			     withColor: [sexp subarrayWithRange:
 						NSMakeRange(2, [sexp count] - 2)]];
 
-  if(!color){
-    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
-    return;
-  }
-
-  DrawingCommand* dc = [[DrawingCommand alloc] init];
-  dc.shape = shape;
   dc.shouldFill = YES;
-  dc.color = color;
 
   [scribbleView addDrawingCommand: dc];
   [scribbleView setNeedsDisplay: YES];
 }
 
 -(void) clearCommand: (NSArray*) sexp {
-  if([sexp count] != 1){
-    NSLog(@"ERROR: clear accepts no arguments, got %@", [sexp printAsSexp]);
-  }
+  [sexp assertSexpFormat: @"no arguments"
+	withLength: 1, false];
 
   [scribbleView clearDrawingCommands];
   [scribbleView setNeedsDisplay: YES];
 }
 
 -(void) backgroundCommand: (NSArray*) sexp {
-  if([sexp count] != 4){
-    NSLog(@"ERROR: Expected (background [red] [green] [blue]), got %@", [sexp printAsSexp]);
-  }
+  [sexp assertSexpFormat: @"(background [red] [green] [blue])"
+	withLength: 4, false, false, false];
 
   NSColor* color = [CommandController colorForArray:
 					[sexp subarrayWithRange:
 						NSMakeRange(1, 3)]];
-
-  if(!color){
-    NSLog(@"ERROR: Expected (fill [shape] [red] [green] [blue] [alpha?]), got %@",sexp);
-    return;
-  }
 
   [scribbleView setBackgroundColor: color];
   [scribbleView setNeedsDisplay: YES];

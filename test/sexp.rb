@@ -80,3 +80,26 @@ describe "stroke command" do
         run("(stroke (rect 100 100 50 50) 1 0 0 0.5)").should be_empty
     end
 end
+
+
+describe "clear command" do
+    it "should refuse to clear with any arguments" do
+        run("(clear 1)")[0].should =~ /ERROR/
+    end
+
+    it "should clear with no arguments" do
+        run("(clear)").should be_empty
+    end
+end
+
+describe "background command" do
+    it "should refuse to run with bad color arguments" do
+        run("(background 1)")[0].should =~ /ERROR/
+        run("(background 1 2 3 4)")[0].should =~ /ERROR/
+        run("(background (1) (2) (3))")[0].should =~ /ERROR/
+    end
+
+    it "should set the background with three arguments" do
+        run("(background 0 0 1)").should be_empty
+    end
+end
