@@ -23,4 +23,46 @@
   }
 }
 
+// "expected" is a textual description of the sexp,
+// length is the length, and the varargs are booleans for whether the elements
+// should be sublists or not.
+// If self doesn't match, then this raises an exception
+- (void) assertSexpFormat: (NSString*) expected withLength: (int) length, ... {
+  if([self count] != length) {
+    [NSException raise: @"sexpFormat"
+		 format: @"expected %@, got %@",
+		 expected,
+		 [self printAsSexp]];
+  } else {
+    BOOL good = true;
+    int sublist;
+    va_list args;
+    int n = 0;
+
+    va_start(args, length);
+
+    while(n < length){
+      sublist = va_arg(args, int);
+      BOOL isArray = [[self objectAtIndex: n] isKindOfClass: [NSArray class]];
+
+      //NSLog(@"sublist: %d isArray: %d", sublist, isArray);
+      if((sublist && !isArray) || (!sublist && isArray)) {
+	good = false;
+	break;
+      }
+
+      n += 1;
+    }	  
+
+    va_end(args);
+
+    if(!good){
+      [NSException raise: @"sexpFormat"
+		   format: @"expected %@, got %@",
+		   expected,
+		   [self printAsSexp]];
+    }
+  }
+}
+
 @end

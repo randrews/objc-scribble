@@ -28,8 +28,8 @@ describe "shape command" do
     end
 
     it "should reject a rect with too few / many args" do
-        run("(shape foo (rect 0 1 2))")[0].should =~ /ERROR: Expected/
-        run("(shape foo (rect 0 1 2 3 4))")[0].should =~ /ERROR: Expected/
+        run("(shape foo (rect 0 1 2))")[0].should =~ /ERROR: expected/
+        run("(shape foo (rect 0 1 2 3 4))")[0].should =~ /ERROR: expected/
     end
 
     it "should reject a rect with lists for args" do
