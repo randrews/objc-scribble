@@ -2,6 +2,7 @@
 #import "ScribbleView.h"
 #import "DrawingCommand.h"
 #import "PrintSexp.h"
+#import "ParseSexp.h"
 
 @interface CommandController : NSObject {
   NSMutableDictionary* shapes;

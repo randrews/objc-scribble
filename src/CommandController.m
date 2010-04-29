@@ -54,66 +54,46 @@
 
     // It's a literal shape
   } else if([sexp isKindOfClass: [NSArray class]]) {
-      NSString* type = [sexp objectAtIndex: 0];
+    NSString* type = [sexp objectAtIndex: 0];
 
-      // Currently, we only support rects
-      if([type isEqual: @"rect"]){
-	if([sexp count] != 5){
-	  NSLog(@"ERROR: Expected (rect [x] [y] [width] [height]), got %@", [sexp printAsSexp]);
-	  return nil;
-	}
+    // Currently, we only support rects
+    if([type isEqual: @"rect"]){
+      [sexp assertSexpFormat: @"(rect [x] [y] [width] [height])"
+	    withLength: 5,
+	    false, false, false, false, false];
 
-	// Ensure these are all atoms
-	for(id obj in sexp){
-	  if(![obj isKindOfClass: [NSString class]]){
-	    NSLog(@"ERROR: Expected (rect [x] [y] [width] [height]), got %@", [sexp printAsSexp]);
-	    return nil;
-	  }
-	}
+      float x = [[sexp objectAtIndex: 1] floatValue] + 0.5;
+      float y = [[sexp objectAtIndex: 2] floatValue] + 0.5;
+      float width = [[sexp objectAtIndex: 3] floatValue];
+      float height = [[sexp objectAtIndex: 4] floatValue];
 
-	float x = [[sexp objectAtIndex: 1] floatValue] + 0.5;
-	float y = [[sexp objectAtIndex: 2] floatValue] + 0.5;
-	float width = [[sexp objectAtIndex: 3] floatValue];
-	float height = [[sexp objectAtIndex: 4] floatValue];
-
-	return [NSBezierPath bezierPathWithRect: NSMakeRect(x, y, width, height)];
-      } else {
-	return nil;
-      }
-  } else {
-    return nil;
+      return [NSBezierPath bezierPathWithRect: NSMakeRect(x, y, width, height)];
+    } else {
+      [NSException raise: @"badShape"
+		   format: @"Unable to make shape from %@",
+		   [sexp printAsSexp]];
+    }
   }
 }
 
 +(NSColor*) colorForArray: (NSArray*) array {
-  // Either (r g b) or (r g b a)
-  if([array count] < 3 || [array count] > 4){
-    return nil;
-  }
-
-  // Make sure everything's an atom
-  for(id obj in array){
-    if(![obj isKindOfClass: [NSString class]]){
-      return nil;
-    }
-  }
-
-  NSArray* color_elements;
-
-  // If it's r g b, then copy into a larger array and add an alpha
   if([array count] == 3){
-    color_elements = [NSMutableArray arrayWithCapacity: 4];
+    NSArray* color_elements = [NSMutableArray arrayWithCapacity: 4];
+
     [(NSMutableArray*)color_elements addObjectsFromArray: array];
     [(NSMutableArray*)color_elements addObject: @"1.0"];
-  } else {
-    // Otherwise, we're fine as is
-    color_elements = array;
-  }
 
-  return [NSColor colorWithCalibratedRed: [[color_elements objectAtIndex: 0] floatValue]
-		  green: [[color_elements objectAtIndex: 1] floatValue]
-		  blue: [[color_elements objectAtIndex: 2] floatValue]
-		  alpha: [[color_elements objectAtIndex: 3] floatValue]];
+    return [self colorForArray: color_elements];
+  } else {
+    [array assertSexpFormat: @"(red green blue [alpha])"
+	   withLength: 4,
+	   false, false, false, false];
+
+    return [NSColor colorWithCalibratedRed: [[array objectAtIndex: 0] floatValue]
+		    green: [[array objectAtIndex: 1] floatValue]
+		    blue: [[array objectAtIndex: 2] floatValue]
+		    alpha: [[array objectAtIndex: 3] floatValue]];
+  }
 }
 
 @end
@@ -144,22 +124,36 @@
 
   id command = [sexp objectAtIndex: 0];
 
-  if([command isEqual: @"echo"]){
-    NSLog(@"%@", [sexp printAsSexp]);
-  } else if([command isEqual: @"shape"]){
-    [self shapeCommand: sexp];
-  } else if([command isEqual: @"stroke"]){
-    [self strokeCommand: sexp];
-  } else if([command isEqual: @"fill"]){
-    [self fillCommand: sexp];
-  } else if([command isEqual: @"clear"]){
-    [self clearCommand: sexp];
-  } else if([command isEqual: @"background"]){
-    [self backgroundCommand: sexp];
+  @try {
+    if([command isEqual: @"echo"]){
+      NSLog(@"%@", [sexp printAsSexp]);
+    } else if([command isEqual: @"shape"]){
+      [self shapeCommand: sexp];
+    } else if([command isEqual: @"stroke"]){
+      [self strokeCommand: sexp];
+    } else if([command isEqual: @"fill"]){
+      [self fillCommand: sexp];
+    } else if([command isEqual: @"clear"]){
+      [self clearCommand: sexp];
+    } else if([command isEqual: @"background"]){
+      [self backgroundCommand: sexp];
+    }
+  } @catch(NSException* e){
+    NSLog(@"ERROR: %@, command was %@",
+	  [e reason],
+	  [sexp printAsSexp]);
   }
 }
 
--(NSBezierPath*) shapeForName: (NSString*) name { return [shapes objectForKey: name]; }
+// Return the shape named "name", or raise an exception. Never returns nil.
+-(NSBezierPath*) shapeForName: (NSString*) name {
+  id shape = [shapes objectForKey: name];
+  if(!shape){
+    [NSException raise: @"shapeNotFound" format: @"Couldn't find shape named %@", name];
+  }
+
+  return shape;
+}
 
 @end
 
@@ -172,37 +166,23 @@
 -(void) shapeCommand: (NSArray*) sexp {
   if([sexp count] != 3 ||
      ![[sexp objectAtIndex: 1] isKindOfClass: [NSString class]]){
-    NSLog(@"ERROR: Expected (shape [name] [shape]), got %@", [sexp printAsSexp]);
-    return;
+    [NSException raise:@"badCmdFmt" format: @"ERROR: Expected (shape [name] [shape])"];
   }
 
-  NSString* name = [sexp objectAtIndex: 1];
-  id shape = [self shapeForSexp: [sexp objectAtIndex: 2]];
-
-  if(shape){
-    [shapes setValue: shape forKey: name];
-  } else {
-    NSLog(@"ERROR: Failed to create shape from %@", [sexp objectAtIndex: 2]);
-  }
+  [shapes setValue: [self shapeForSexp: [sexp objectAtIndex: 2]]
+	  forKey: [sexp objectAtIndex: 1]];
 }
 
 -(void) strokeCommand: (NSArray*) sexp {
   // First, make sure we have the right number of arguments.
   // We need five, including "stroke", with an optional sixth
   if([sexp count] != 5 && [sexp count] != 6){
-    NSLog(@"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?]), got %@",
-	  [sexp printAsSexp]);
-    return;
+    [NSException raise: @"badCmdFmt"
+		 format: @"ERROR: Expected (stroke [shape] [red] [green] [blue] [alpha?])"];
   }
 
   // Now, we need to find the shape.
   NSBezierPath* shape = [self shapeForSexp: [sexp objectAtIndex: 1]];
-
-  // Check that we have a shape
-  if(!shape){
-    NSLog(@"ERROR: %@ isn't a valid shape", [sexp printAsSexp]);
-    return;
-  }
 
   // We have a shape, now we need a color.
   NSColor* color = [CommandController colorForArray:
